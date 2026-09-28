@@ -1,29 +1,28 @@
 """Точка запуска приложения «Система управления кадровыми документами»."""
 from datetime import date
 
-from categories import (
+from models import Category, Document, Employee
+from models.categories import (
     add_category,
     delete_category,
     edit_category,
-    get_category_label,
+    find_category_by_name,
     list_categories,
 )
-from documents import (
+from models.documents import (
     add_document,
     filter_documents_by_category,
     find_documents_by_employee,
-    generate_report_line,
-    get_document_status,
     get_documents_statistics,
     iter_documents_by_status,
     sort_documents_by_expiry,
 )
-from employees import (
+from models.employees import (
     add_employee,
     delete_employee,
     edit_employee,
     find_employee,
-    get_employee_seniority,
+    find_employee_by_id,
 )
 from storage import (
     load_categories,
@@ -57,46 +56,29 @@ MENU = """
 
 
 # функция вывода списка сотрудников на экран
-def show_employees(employees: dict[int, dict], today: date) -> None:
+def show_employees(employees: list[Employee], today: date) -> None:
     """Вывести список сотрудников вместе со стажем."""
     if not employees:
         print("Список сотрудников пуст.")
         return
-    for employee in employees.values():
-        seniority = get_employee_seniority(employee, today)
-        print(
-            f"[{employee['id']}] {employee['name']} — "
-            f"{employee['position']}, {employee['department']} "
-            f"(принят {employee['hire_date']}, стаж {seniority} лет)"
-        )
+    for employee in employees:
+        seniority = employee.get_seniority(today)
+        print(f"[{employee.id}] {employee} (стаж {seniority} лет)")
 
 
 # функция вывода списка документов на экран
-def show_documents(
-    documents: list[dict],
-    employees: dict[int, dict],
-    categories: dict[str, str],
-    today: date,
-) -> None:
+def show_documents(documents: list[Document], today: date) -> None:
     """Вывести документы с сотрудником, категорией и статусом срока."""
     if not documents:
         print("Документы не найдены.")
         return
-    for doc in sort_documents_by_expiry(documents):
-        employee = employees.get(doc["employee_id"])
-        employee_name = employee["name"] if employee else "не найден"
-        expiry = date.fromisoformat(doc["expiry_date"])
-        status = get_document_status(expiry, today)
-        label = get_category_label(categories, doc["category"])
-        title = (
-            f"[{doc['id']}] {doc['name']} "
-            f"({doc['category']} — {label}, {employee_name})"
-        )
-        print(generate_report_line(title, status))
+    for document in sort_documents_by_expiry(documents):
+        status = document.get_status(today)
+        print(f"[{document.id}] {document.to_report_line(status)}")
 
 
 # функция вывода статистики по документам и срокам их действия
-def show_statistics(documents: list[dict], today: date) -> None:
+def show_statistics(documents: list[Document], today: date) -> None:
     """Вывести статистику и список документов с истекающим сроком."""
     stats = get_documents_statistics(documents, today)
     print("Статистика по документам:")
@@ -109,12 +91,12 @@ def show_statistics(documents: list[dict], today: date) -> None:
     )
     if not expiring:
         print("  таких документов нет.")
-    for doc in expiring:
-        print(f"  [{doc['id']}] {doc['name']} (до {doc['expiry_date']})")
+    for document in expiring:
+        print(f"  [{document.id}] {document} (до {document.expiry_date})")
 
 
 # функция подменю управления категориями (создание/редактирование/удаление)
-def manage_categories(categories: dict[str, str]) -> None:
+def manage_categories(categories: list[Category]) -> None:
     """Подменю создания, редактирования и удаления категорий."""
     existing = ", ".join(list_categories(categories)) or "нет категорий"
     print(f"Категории: {existing}")
@@ -123,6 +105,9 @@ def manage_categories(categories: dict[str, str]) -> None:
 
     if action == "add":
         name = input_nonempty("Название категории: ")
+        if not Category.validate_name(name):
+            print("Название категории не может быть пустым.")
+            return
         description = input_nonempty("Описание категории: ")
         add_category(categories, name, description)
         print("Категория добавлена.")
@@ -143,12 +128,39 @@ def manage_categories(categories: dict[str, str]) -> None:
         print("Отменено.")
 
 
+# функция пользовательского сценария создания документа
+def create_new_document(
+    documents: list[Document],
+    categories: list[Category],
+    employees: list[Employee],
+) -> None:
+    """Найти сотрудника и категорию и создать связанный документ."""
+    employee_id = input_int("Id сотрудника: ")
+    employee = find_employee_by_id(employees, employee_id)
+    if employee is None:
+        print("Сотрудник с таким id не найден.")
+        return
+
+    category_name = input_nonempty("Категория: ")
+    category = find_category_by_name(categories, category_name)
+    if category is None:
+        print("Категория не найдена. Сначала создайте её в пункте 11.")
+        return
+
+    name = input_nonempty("Название документа: ")
+    expiry_date = input_date("Срок действия (дд.мм.гггг): ")
+    document = add_document(
+        documents, name, category, employee, expiry_date.isoformat()
+    )
+    print(f"Документ добавлен, id = {document.id}")
+
+
 # функция точки входа: цикл меню и обработка выбора пользователя
 def main() -> None:
     """Основной цикл меню приложения."""
     employees = load_employees(EMPLOYEES_FILE)
-    documents = load_documents(DOCUMENTS_FILE)
     categories = load_categories(CATEGORIES_FILE)
+    documents = load_documents(DOCUMENTS_FILE, categories, employees)
     today = date.today()
 
     while True:
@@ -162,17 +174,17 @@ def main() -> None:
             position = input_nonempty("Должность: ")
             department = input_nonempty("Отдел: ")
             hire_date = input_date("Дата приёма (дд.мм.гггг): ")
-            employee_id = add_employee(
+            employee = add_employee(
                 employees, name, position, department, hire_date.isoformat()
             )
-            print(f"Сотрудник добавлен, id = {employee_id}")
+            print(f"Сотрудник добавлен, id = {employee.id}")
         elif choice == 3:
             query = input_nonempty("Часть имени для поиска: ")
             found = find_employee(employees, query)
             if not found:
                 print("Сотрудники не найдены.")
             for employee in found:
-                print(f"[{employee['id']}] {employee['name']}")
+                print(f"[{employee.id}] {employee}")
         elif choice == 4:
             employee_id = input_int("Id сотрудника: ")
             position = input_optional("Новая должность (Enter — не менять): ")
@@ -187,38 +199,38 @@ def main() -> None:
         elif choice == 5:
             employee_id = input_int("Id сотрудника: ")
             deleted = delete_employee(employees, employee_id)
-            print("Сотрудник удалён." if deleted else "Сотрудник не найден.")
-        elif choice == 6:
-            show_documents(documents, employees, categories, today)
-        elif choice == 7:
-            employee_id = input_int("Id сотрудника: ")
-            if employee_id not in employees:
-                print("Сотрудник с таким id не найден.")
+            if deleted:
+                print("Сотрудник удалён.")
             else:
-                name = input_nonempty("Название документа: ")
-                category = input_nonempty("Категория: ")
-                expiry_date = input_date("Срок действия (дд.мм.гггг): ")
-                document_id = add_document(
-                    documents, name, category,
-                    employee_id, expiry_date.isoformat(),
-                )
-                print(f"Документ добавлен, id = {document_id}")
+                print("Сотрудник не найден.")
+        elif choice == 6:
+            show_documents(documents, today)
+        elif choice == 7:
+            create_new_document(documents, categories, employees)
         elif choice == 8:
             employee_id = input_int("Id сотрудника: ")
-            found = find_documents_by_employee(documents, employee_id)
-            show_documents(found, employees, categories, today)
+            employee = find_employee_by_id(employees, employee_id)
+            if employee is None:
+                print("Сотрудник с таким id не найден.")
+            else:
+                found = find_documents_by_employee(documents, employee)
+                show_documents(found, today)
         elif choice == 9:
-            category = input_nonempty("Категория: ")
-            found = filter_documents_by_category(documents, category)
-            show_documents(found, employees, categories, today)
+            category_name = input_nonempty("Категория: ")
+            category = find_category_by_name(categories, category_name)
+            if category is None:
+                print("Категория не найдена.")
+            else:
+                found = filter_documents_by_category(documents, category)
+                show_documents(found, today)
         elif choice == 10:
             show_statistics(documents, today)
         elif choice == 11:
             manage_categories(categories)
         elif choice == 0:
             save_employees(EMPLOYEES_FILE, employees)
-            save_documents(DOCUMENTS_FILE, documents)
             save_categories(CATEGORIES_FILE, categories)
+            save_documents(DOCUMENTS_FILE, documents)
             print("Данные сохранены. До свидания!")
             break
         else:
