@@ -68,6 +68,17 @@ def add_document(
     return document
 
 
+# функция поиска документа по идентификатору (используется веб-страницей)
+def find_document_by_id(
+    documents: list[Document], document_id: int
+) -> Document | None:
+    """Найти документ по идентификатору."""
+    for document in documents:
+        if document.id == document_id:
+            return document
+    return None
+
+
 # функция поиска документов конкретного сотрудника
 def find_documents_by_employee(
     documents: list[Document], employee: Employee

@@ -174,17 +174,17 @@ def main() -> None:
             position = input_nonempty("Должность: ")
             department = input_nonempty("Отдел: ")
             hire_date = input_date("Дата приёма (дд.мм.гггг): ")
-            employee = add_employee(
+            new_employee = add_employee(
                 employees, name, position, department, hire_date.isoformat()
             )
-            print(f"Сотрудник добавлен, id = {employee.id}")
+            print(f"Сотрудник добавлен, id = {new_employee.id}")
         elif choice == 3:
             query = input_nonempty("Часть имени для поиска: ")
-            found = find_employee(employees, query)
-            if not found:
+            found_employees = find_employee(employees, query)
+            if not found_employees:
                 print("Сотрудники не найдены.")
-            for employee in found:
-                print(f"[{employee.id}] {employee}")
+            for found_employee in found_employees:
+                print(f"[{found_employee.id}] {found_employee}")
         elif choice == 4:
             employee_id = input_int("Id сотрудника: ")
             position = input_optional("Новая должность (Enter — не менять): ")
@@ -209,20 +209,24 @@ def main() -> None:
             create_new_document(documents, categories, employees)
         elif choice == 8:
             employee_id = input_int("Id сотрудника: ")
-            employee = find_employee_by_id(employees, employee_id)
-            if employee is None:
+            target_employee = find_employee_by_id(employees, employee_id)
+            if target_employee is None:
                 print("Сотрудник с таким id не найден.")
             else:
-                found = find_documents_by_employee(documents, employee)
-                show_documents(found, today)
+                employee_documents = find_documents_by_employee(
+                    documents, target_employee
+                )
+                show_documents(employee_documents, today)
         elif choice == 9:
             category_name = input_nonempty("Категория: ")
-            category = find_category_by_name(categories, category_name)
-            if category is None:
+            target_category = find_category_by_name(categories, category_name)
+            if target_category is None:
                 print("Категория не найдена.")
             else:
-                found = filter_documents_by_category(documents, category)
-                show_documents(found, today)
+                category_documents = filter_documents_by_category(
+                    documents, target_category
+                )
+                show_documents(category_documents, today)
         elif choice == 10:
             show_statistics(documents, today)
         elif choice == 11:

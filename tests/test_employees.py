@@ -6,6 +6,7 @@ from models.employees import (
     delete_employee,
     edit_employee,
     find_employee,
+    find_employee_by_id,
 )
 
 NAME = "Иванов Иван Иванович"
@@ -67,3 +68,13 @@ def test_employee_str():
     text = str(employee)
     assert POSITION in text
     assert DEPARTMENT in text
+
+
+# тест: поиск сотрудника по id возвращает объект или None
+def test_find_employee_by_id():
+    employees = []
+    employee = add_employee(
+        employees, NAME, POSITION, DEPARTMENT, HIRE_DATE
+    )
+    assert find_employee_by_id(employees, employee.id) is employee
+    assert find_employee_by_id(employees, 999) is None

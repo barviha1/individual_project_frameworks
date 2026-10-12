@@ -1,9 +1,14 @@
 """Сохранение и загрузка объектов проекта в формате JSON."""
 import json
+from pathlib import Path
+from typing import NamedTuple
 
 from models import Category, Document, Employee
 from models.categories import find_category_by_name
 from models.employees import find_employee_by_id
+
+# каталог с JSON-файлами: путь не зависит от того, откуда запущена программа
+DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
 # функция загрузки сотрудников из JSON-файла (с обработкой ошибок)
@@ -118,3 +123,26 @@ def save_documents(filename: str, documents: list[Document]) -> None:
     ]
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+class ProjectData(NamedTuple):
+    """Все коллекции объектов проекта, загруженные из JSON-файлов."""
+
+    employees: list[Employee]
+    categories: list[Category]
+    documents: list[Document]
+
+
+# функция загрузки всех данных проекта (используется веб-интерфейсом)
+def load_all() -> ProjectData:
+    """Загрузить сотрудников, категории и документы из каталога data/.
+
+    Документы загружаются последними: для восстановления их связей
+    нужны уже созданные объекты Employee и Category.
+    """
+    employees = load_employees(str(DATA_DIR / "employees.json"))
+    categories = load_categories(str(DATA_DIR / "categories.json"))
+    documents = load_documents(
+        str(DATA_DIR / "documents.json"), categories, employees
+    )
+    return ProjectData(employees, categories, documents)

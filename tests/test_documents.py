@@ -5,6 +5,7 @@ from models.categories import Category
 from models.documents import (
     add_document,
     filter_documents_by_category,
+    find_document_by_id,
     find_documents_by_employee,
     get_documents_statistics,
     sort_documents_by_expiry,
@@ -98,3 +99,13 @@ def test_to_report_line():
     status = document.get_status(date(2026, 9, 12))
     line = document.to_report_line(status)
     assert "[ВНИМАНИЕ]" in line
+
+
+# тест: поиск документа по id возвращает объект или None
+def test_find_document_by_id():
+    documents = []
+    document = add_document(
+        documents, "Приказ №5", ORDER, EMPLOYEE, "2026-12-01"
+    )
+    assert find_document_by_id(documents, document.id) is document
+    assert find_document_by_id(documents, 999) is None
