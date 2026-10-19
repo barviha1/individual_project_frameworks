@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Документы – HRDocs
+{% endblock %}
+
+{% block content %}
+    <h1>Документы</h1>
+    <p>
+        Всего документов: {{ document_rows|length }}
+    </p>
+    <p>
+        {% for status, count in stats.items %}
+            <span class="me-3">
+                {% include "documents/includes/document_status.html" %}
+                {{ count }}
+            </span>
+        {% endfor %}
+    </p>
+
+    <ul class="list-group">
+        {% for row in document_rows %}
+            <li class="list-group-item d-flex justify-content-between">
+                <a href="{% url 'documents:detail' row.document.id %}">
+                    {{ row.document.name }} – {{ row.document.employee.name }}
+                </a>
+                <span>
+                    до {{ row.expiry|date:"d.m.Y" }}
+                    {% include "documents/includes/document_status.html" with status=row.status %}
+                </span>
+            </li>
+        {% empty %}
+            <li class="list-group-item">Документов пока нет.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

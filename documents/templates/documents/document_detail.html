@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if document %}
+        {{ document.name }} – HRDocs
+    {% else %}
+        Документ не найден – HRDocs
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if document %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title h4">
+                    {{ document.name|default:"Без названия" }}
+                </h1>
+                <p class="card-text">
+                    <strong>ID:</strong> {{ document.id }}
+                </p>
+                <p class="card-text">
+                    <strong>Категория:</strong> {{ document.category.name }}
+                    – {{ document.category.description }}
+                </p>
+                <p class="card-text">
+                    <strong>Сотрудник:</strong>
+                    <a href="{% url 'employees:detail' document.employee.id %}">
+                        {{ document.employee.name }}
+                    </a>
+                </p>
+                <p class="card-text">
+                    <strong>Срок действия до:</strong>
+                    {{ expiry|date:"d.m.Y" }}
+                </p>
+                <p class="card-text">
+                    <strong>Статус:</strong>
+                    {% include "documents/includes/document_status.html" %}
+                </p>
+            </div>
+        </div>
+    {% else %}
+        <h1 class="text-danger">Документ не найден</h1>
+        <p>Документ с указанным идентификатором отсутствует.</p>
+    {% endif %}
+
+    <a
+        href="{% url 'documents:list' %}"
+        class="btn btn-outline-secondary mt-3"
+    >
+        ← к списку документов
+    </a>
+{% endblock %}

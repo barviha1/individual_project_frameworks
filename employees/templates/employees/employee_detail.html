@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if employee %}
+        {{ employee.name }} – HRDocs
+    {% else %}
+        Сотрудник не найден – HRDocs
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if employee %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h1 class="card-title h4">
+                    {{ employee.name|default:"Без имени" }}
+                </h1>
+                <p class="card-text">
+                    <strong>ID:</strong> {{ employee.id }}
+                </p>
+                <p class="card-text">
+                    <strong>Должность:</strong> {{ employee.position }}
+                </p>
+                <p class="card-text">
+                    <strong>Отдел:</strong> {{ employee.department }}
+                </p>
+                <p class="card-text">
+                    <strong>Дата приёма:</strong>
+                    {{ hire_date|date:"d.m.Y" }}
+                </p>
+                <p class="card-text">
+                    <strong>Стаж:</strong> {{ seniority }} лет
+                </p>
+            </div>
+        </div>
+
+        <h2 class="h4">Документы сотрудника</h2>
+        <ul class="list-group">
+            {% for row in document_rows %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <a href="{% url 'documents:detail' row.document.id %}">
+                        {{ row.document.name }}
+                        ({{ row.document.category.name }})
+                    </a>
+                    <span>
+                        до {{ row.expiry|date:"d.m.Y" }}
+                        {% include "documents/includes/document_status.html" with status=row.status %}
+                    </span>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Документов пока нет.</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <h1 class="text-danger">Сотрудник не найден</h1>
+        <p>Сотрудник с указанным идентификатором отсутствует.</p>
+    {% endif %}
+
+    <a
+        href="{% url 'employees:list' %}"
+        class="btn btn-outline-secondary mt-3"
+    >
+        ← к списку сотрудников
+    </a>
+{% endblock %}

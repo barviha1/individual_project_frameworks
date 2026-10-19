@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Категории – HRDocs
+{% endblock %}
+
+{% block content %}
+    <h1>Категории документов</h1>
+    <p>
+        Всего категорий: {{ category_rows|length }}
+    </p>
+
+    <ul class="list-group">
+        {% for row in category_rows %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>
+                    <strong>{{ row.category.name }}</strong><br>
+                    {{ row.category.description }}
+                </span>
+                <span class="badge bg-primary align-self-center">
+                    документов: {{ row.count }}
+                </span>
+            </li>
+        {% empty %}
+            <li class="list-group-item">Категорий пока нет.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,0 +1,57 @@
+/* Собственные стили проекта HRDocs (дополняют Bootstrap) */
+
+body {
+    min-height: 100vh;
+    background-color: #f5f7fb;
+}
+
+/* шапка сайта: логотип и навигация */
+.site-header {
+    padding: 0.5rem 0;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e1e6ef;
+}
+
+.hrdocs-logo {
+    height: 44px;
+    width: auto;
+    margin: 0.25rem 1.5rem 0.25rem 0;
+}
+
+/* карточка сотрудника (includes/employee_card.html) */
+.employee-card {
+    border: 1px solid #dde3ee;
+    border-left: 4px solid #2563eb;
+    border-radius: 8px;
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.employee-card:hover {
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+/* статус документа (includes/document_status.html) */
+.document-status {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.document-status-active {
+    border: 1px solid #198754;
+}
+
+.document-status-soon {
+    border: 1px solid #b58100;
+}
+
+.document-status-expired {
+    border: 1px solid #a52834;
+}
+
+/* подвал */
+.site-footer {
+    padding-top: 1rem;
+    border-top: 1px solid #e1e6ef;
+    color: #6b7280;
+    font-size: 0.9rem;
+}

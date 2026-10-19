@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Главная – HRDocs
+{% endblock %}
+
+{% block content %}
+    <h1 class="display-4">HRDocs</h1>
+    <p class="lead">
+        Система управления кадровыми документами.
+    </p>
+    <p>Основные разделы:</p>
+    <a href="{% url 'employees:list' %}" class="btn btn-primary me-2">
+        Сотрудники
+    </a>
+    <a href="{% url 'documents:list' %}" class="btn btn-secondary me-2">
+        Документы
+    </a>
+    <a href="{% url 'categories:list' %}" class="btn btn-secondary">
+        Категории
+    </a>
+{% endblock %}

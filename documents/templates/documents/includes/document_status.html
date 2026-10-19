@@ -1,0 +1,17 @@
+{% if status == "Активен" %}
+    <span class="badge bg-success document-status document-status-active">
+        {{ status }}
+    </span>
+{% elif status == "Скоро истекает" %}
+    <span class="badge bg-warning text-dark document-status document-status-soon">
+        {{ status }}
+    </span>
+{% elif status == "Истёк" %}
+    <span class="badge bg-danger document-status document-status-expired">
+        {{ status }}
+    </span>
+{% else %}
+    <span class="badge bg-secondary document-status">
+        {{ status|default:"Нет данных" }}
+    </span>
+{% endif %}

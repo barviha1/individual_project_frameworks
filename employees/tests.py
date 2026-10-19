@@ -43,6 +43,31 @@ class EmployeePagesTests(SimpleTestCase):
         response = self.client.get("/employees/999/")
         self.assertContains(response, "Сотрудник не найден", status_code=404)
 
+    # тест: страницы строятся из шаблонов, карточка подключена через include
+    def test_templates_used(self) -> None:
+        response = self.client.get("/employees/")
+        self.assertTemplateUsed(response, "employees/employee_list.html")
+        self.assertTemplateUsed(
+            response, "employees/includes/employee_card.html"
+        )
+
+    # тест: фильтр length выводит число сотрудников
+    def test_length_filter(self) -> None:
+        response = self.client.get("/employees/")
+        self.assertContains(response, "Всего сотрудников: 1")
+
+    # тест: фильтр date выводит дату приёма в формате дд.мм.гггг
+    def test_date_filter(self) -> None:
+        response = self.client.get("/employees/1/")
+        self.assertContains(response, "30.03.2026")
+
+    # тест: при пустом списке срабатывает {% empty %}
+    def test_empty_list(self) -> None:
+        empty = ProjectData([], [], [])
+        with patch("employees.views.load_all", lambda: empty):
+            response = self.client.get("/employees/")
+        self.assertContains(response, "Сотрудников пока нет.")
+
     # тест: HTML-теги в данных экранируются и не попадают на страницу
     def test_name_is_escaped(self) -> None:
         evil = Employee(

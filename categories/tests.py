@@ -37,3 +37,14 @@ class CategoryPagesTests(SimpleTestCase):
         response = self.client.get("/categories/")
         self.assertContains(response, "документов: 1")
         self.assertContains(response, "документов: 0")
+
+    # тест: страница строится из шаблона category_list.html
+    def test_template_used(self) -> None:
+        response = self.client.get("/categories/")
+        self.assertTemplateUsed(response, "categories/category_list.html")
+        self.assertTemplateUsed(response, "base.html")
+
+    # тест: фильтр length выводит число категорий
+    def test_length_filter(self) -> None:
+        response = self.client.get("/categories/")
+        self.assertContains(response, "Всего категорий: 2")

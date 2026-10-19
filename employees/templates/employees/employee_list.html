@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Сотрудники – HRDocs
+{% endblock %}
+
+{% block content %}
+    <h1>Сотрудники</h1>
+    <p>
+        Всего сотрудников: {{ employee_rows|length }}
+    </p>
+
+    {% for row in employee_rows %}
+        {% include "employees/includes/employee_card.html" with employee=row.employee seniority=row.seniority %}
+    {% empty %}
+        <p>Сотрудников пока нет.</p>
+    {% endfor %}
+{% endblock %}
